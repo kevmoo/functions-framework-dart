@@ -19,5 +19,3 @@ dependency_overrides:
     path: ../../functions_framework
   functions_framework_builder:
     path: ../../functions_framework_builder
-  googleapis_auth:
-    path: /Users/kevmoo/github/googleapis_auth

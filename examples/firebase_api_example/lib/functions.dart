@@ -38,7 +38,11 @@ Future<Response> function(Request request) async {
     throw UnsupportedError('Not sure why we do not have a project id!');
   }
 
-  final client = await doClient();
+  final client = await clientViaApplicationDefaultCredentials(
+    scopes: [
+      '"https://www.googleapis.com/auth/datastore"',
+    ],
+  );
 
   try {
     final api = FirestoreApi(client);
@@ -52,19 +56,5 @@ Future<Response> function(Request request) async {
     );
   } finally {
     client.close();
-  }
-}
-
-Future<AutoRefreshingAuthClient> doClient() async {
-  try {
-    return await clientViaApplicationDefaultCredentials(
-      scopes: [
-        '"https://www.googleapis.com/auth/datastore"',
-      ],
-    );
-  } catch (e, stack) {
-    print(e);
-    print(stack);
-    rethrow;
   }
 }
