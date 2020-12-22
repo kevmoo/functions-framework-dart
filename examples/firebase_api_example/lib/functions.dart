@@ -12,22 +12,50 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import 'dart:convert';
+
 import 'package:functions_framework/functions_framework.dart';
+import 'package:functions_framework/src/cloud_metadata.dart';
+import 'package:googleapis/firestore/v1.dart';
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:shelf/shelf.dart';
 
+String projectId;
+
 @CloudFunction()
 Future<Response> function(Request request) async {
-  final client = await _client();
+  if (projectId == null) {
+    final metadata = CloudMetadata();
+    try {
+      final result = await metadata.projectInfo();
+      projectId = result.projectId;
+    } finally {
+      metadata.close();
+    }
+  }
+
+  if (projectId == null) {
+    throw UnsupportedError('Not sure why we do not have a project id!');
+  }
+
+  final client = await doClient();
 
   try {
-    return Response.ok('Hello, World!');
+    final api = FirestoreApi(client);
+    final theList = await api.projects.locations.list('projects/$projectId');
+
+    return Response.ok(
+      const JsonEncoder.withIndent(' ').convert(theList),
+      headers: {
+        'content-type': 'application/json',
+      },
+    );
   } finally {
     client.close();
   }
 }
 
-Future<AutoRefreshingAuthClient> _client() async {
+Future<AutoRefreshingAuthClient> doClient() async {
   try {
     return await clientViaApplicationDefaultCredentials(
       scopes: [
