@@ -19,6 +19,7 @@ jobs:
     strategy:
       matrix:
         example_directory:
+          - examples/firebase_api_example
           - examples/hello
           - examples/json
           - examples/raw_cloudevent
