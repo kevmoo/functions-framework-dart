@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:functions_framework/functions_framework.dart';
 import 'package:functions_framework/src/cloud_metadata.dart';
@@ -20,7 +21,7 @@ import 'package:googleapis/firestore/v1.dart';
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:shelf/shelf.dart';
 
-String projectId;
+String? projectId;
 
 @CloudFunction()
 Future<Response> function(Request request) async {
@@ -29,6 +30,11 @@ Future<Response> function(Request request) async {
     try {
       final result = await metadata.projectInfo();
       projectId = result.projectId;
+    } on SocketException catch (e) {
+      print('Could not access metadata server.');
+      print(e);
+      print('Trying local GCLOUD_PROJECT variable instead!');
+      projectId = Platform.environment['GCLOUD_PROJECT'];
     } finally {
       metadata.close();
     }
@@ -39,9 +45,7 @@ Future<Response> function(Request request) async {
   }
 
   final client = await clientViaApplicationDefaultCredentials(
-    scopes: [
-      '"https://www.googleapis.com/auth/datastore"',
-    ],
+    scopes: [FirestoreApi.cloudPlatformScope],
   );
 
   try {
